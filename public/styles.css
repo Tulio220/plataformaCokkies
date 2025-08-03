@@ -547,60 +547,235 @@ body {
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .sidebar.aberta {
-    transform: translateX(0);
-  }
-
-  .main-content {
-    margin-left: 0;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .analysis-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .config-grid {
-    grid-template-columns: 1fr;
-  }
-
+@media (max-width: 900px) {
   .main-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
     padding: 1rem;
   }
-
   .content-area {
     padding: 1rem;
   }
-
+  .dashboard-grid,
+  .analysis-grid,
+  .config-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
   .modal-content {
-    width: 95%;
-    padding: 1.5rem;
+    width: 98%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .sidebar {
+    display: none !important;
+  }
+  .main-content {
+    margin-left: 0;
+    width: 100vw;
+    min-width: 0;
+  }
+  .main-header {
+    padding: 1rem 0.5rem;
+  }
+  .content-area {
+    padding: 0.5rem;
+  }
+  .modal-content {
+    width: 99%;
+    padding: 0.5rem;
+  }
+  .logo {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  .img-logo {
+    height: 7vh;
+    width: 7vh;
+  }
+  .bottom-nav {
+    display: flex !important;
+  }
+  .data-table, .table-container {
+    display: none !important;
+  }
+  .mobile-cards {
+    display: block !important;
+  }
+}
+/* Bottom navigation para mobile */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 60px;
+  background: var(--cor-card);
+  border-top: 1px solid var(--cor-borda);
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  z-index: 3000;
+  justify-content: space-around;
+  align-items: center;
+}
+.bottom-nav .nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-sidebar-texto);
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  transition: var(--transicao);
+}
+.bottom-nav .nav-btn.active {
+  color: var(--cor-primaria);
+}
+.bottom-nav .nav-btn span {
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+/* Cards para mobile (substituem tabelas) */
+.mobile-cards {
+  display: none;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.mobile-card {
+  background: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--border-radius);
+  box-shadow: var(--sombra-card);
+  margin-bottom: 1rem;
+  padding: 1rem;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mobile-card .status-badge {
+  align-self: flex-start;
+}
+
+@media (max-width: 600px) {
+  .main-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.5rem 0.25rem;
+  }
+  .dashboard-grid,
+  .analysis-grid,
+  .config-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .card-header,
+  .card-body {
+    padding: 0.75rem;
+  }
+  .section-title {
+    font-size: 1.2rem;
+  }
+  .metric-value {
+    font-size: 1.2rem;
+  }
+  .btn {
+    font-size: 1rem;
+    padding: 0.6rem 1rem;
+  }
+  .form-input {
+    font-size: 1rem;
+    padding: 0.6rem;
+  }
+  .modal-content {
+    width: 100%;
+    padding: 0.25rem;
+  }
+  .img-logo {
+    height: 6vh;
+    width: 6vh;
   }
 }
 
 @media (max-width: 480px) {
+  .sidebar {
+    width: 95vw;
+    max-width: 95vw;
+    min-width: 0;
+    font-size: 0.95rem;
+  }
+  .sidebar-header {
+    padding: 1rem 0.5rem;
+  }
+  .brand-title {
+    font-size: 1rem;
+  }
+  .nav-link {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+  }
+  .main-header {
+    padding: 0.5rem 0.25rem;
+  }
+  .content-area {
+    padding: 0.25rem;
+  }
+  .card-header,
+  .card-body {
+    padding: 0.5rem;
+  }
+  .section-title {
+    font-size: 1rem;
+  }
+  .metric-value {
+    font-size: 1rem;
+  }
+  .btn {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.7rem;
+  }
+  .form-input {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+  }
+  .modal-content {
+    width: 100%;
+    padding: 0.1rem;
+  }
+  .img-logo {
+    height: 5vh;
+    width: 5vh;
+  }
   .section-actions {
     flex-direction: column;
+    gap: 0.5rem;
   }
-
   .btn {
     justify-content: center;
+    width: 100%;
   }
-
   .table-container {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-
   .data-table th,
   .data-table td {
-    padding: 0.5rem;
+    padding: 0.4rem;
+    min-width: 90px;
   }
 }

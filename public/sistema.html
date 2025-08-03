@@ -14,7 +14,7 @@
   </head>
   <body>
     <div class="container">
-      <!-- Sidebar -->
+      <!-- Sidebar (desktop) -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="logo-container">
@@ -24,7 +24,6 @@
             <i class="fas fa-bars"></i>
           </button>
         </div>
-
         <nav class="sidebar-nav">
           <ul class="nav-menu">
             <li class="nav-item">
@@ -72,6 +71,37 @@
           </ul>
         </nav>
       </aside>
+      <!-- Bottom navigation (mobile) -->
+      <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-btn" data-section="dashboard">
+          <i class="fas fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-section="pedidos">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Pedidos</span>
+        </button>
+        <button class="nav-btn" data-section="produtos">
+          <i class="fas fa-cookie-bite"></i>
+          <span>Produtos</span>
+        </button>
+        <button class="nav-btn" data-section="custos">
+          <i class="fas fa-calculator"></i>
+          <span>Custos</span>
+        </button>
+        <button class="nav-btn" data-section="lucros">
+          <i class="fas fa-chart-line"></i>
+          <span>Lucros</span>
+        </button>
+        <button class="nav-btn" data-section="analises">
+          <i class="fas fa-chart-bar"></i>
+          <span>Análises</span>
+        </button>
+        <button class="nav-btn" data-section="configuracoes">
+          <i class="fas fa-cog"></i>
+          <span>Configurações</span>
+        </button>
+      </nav>
 
       <!-- Main Content -->
       <main class="main-content">
@@ -169,26 +199,27 @@
               <div class="card-header">
                 <h3>Lista de Pedidos</h3>
               </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table" id="tabelaPedidos">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Produto</th>
-                        <th>Quantidade</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody id="corpoTabelaPedidos">
-                      <!-- Dados serão inseridos via JavaScript -->
-                    </tbody>
-                  </table>
-                </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="tabelaPedidos">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cliente</th>
+                      <th>Produto</th>
+                      <th>Quantidade</th>
+                      <th>Valor</th>
+                      <th>Status</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="corpoTabelaPedidos">
+                    <!-- Dados serão inseridos via JavaScript -->
+                  </tbody>
+                </table>
               </div>
+              <div class="mobile-cards" id="mobileCardsPedidos" style="display:none"></div>
+            </div>
             </div>
           </div>
 
@@ -222,26 +253,27 @@
               <div class="card-header">
                 <h3>Catálogo de Produtos</h3>
               </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table" id="tabelaProdutos">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Categoria</th>
-                        <th>Preço</th>
-                        <th>Estoque</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody id="corpoTabelaProdutos">
-                      <!-- Dados serão inseridos via JavaScript -->
-                    </tbody>
-                  </table>
-                </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="tabelaProdutos">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome</th>
+                      <th>Categoria</th>
+                      <th>Preço</th>
+                      <th>Estoque</th>
+                      <th>Status</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="corpoTabelaProdutos">
+                    <!-- Dados serão inseridos via JavaScript -->
+                  </tbody>
+                </table>
               </div>
+              <div class="mobile-cards" id="mobileCardsProdutos" style="display:none"></div>
+            </div>
             </div>
           </div>
 
@@ -275,26 +307,27 @@
               <div class="card-header">
                 <h3>Controle de Custos</h3>
               </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table" id="tabelaCustos">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Descrição</th>
-                        <th>Categoria</th>
-                        <th>Valor</th>
-                        <th>Data</th>
-                        <th>Tipo</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody id="corpoTabelaCustos">
-                      <!-- Dados serão inseridos via JavaScript -->
-                    </tbody>
-                  </table>
-                </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="tabelaCustos">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Descrição</th>
+                      <th>Categoria</th>
+                      <th>Valor</th>
+                      <th>Data</th>
+                      <th>Tipo</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="corpoTabelaCustos">
+                    <!-- Dados serão inseridos via JavaScript -->
+                  </tbody>
+                </table>
               </div>
+              <div class="mobile-cards" id="mobileCardsCustos" style="display:none"></div>
+            </div>
             </div>
           </div>
 

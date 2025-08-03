@@ -28,7 +28,7 @@ function configurarEventos() {
     btnToggle.addEventListener("click", alternarSidebar);
   }
 
-  // Links de navegação
+  // Links de navegação (sidebar)
   const linksNav = document.querySelectorAll(".nav-link");
   linksNav.forEach((link) => {
     link.addEventListener("click", function (e) {
@@ -37,6 +37,20 @@ function configurarEventos() {
       carregarSecao(secao);
     });
   });
+
+  // Navegação inferior (mobile)
+  const bottomNav = document.getElementById("bottomNav");
+  if (bottomNav) {
+    bottomNav.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", function () {
+        const secao = this.getAttribute("data-section");
+        carregarSecao(secao);
+        // Atualiza destaque
+        bottomNav.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+        this.classList.add("active");
+      });
+    });
+  }
 
   // Modal
   const modal = document.getElementById("modal");
@@ -125,7 +139,8 @@ async function preencherTabelas() {
 
 async function preencherTabelaPedidos() {
   const tbody = document.getElementById("corpoTabelaPedidos");
-  if (!tbody) return;
+  const mobileCards = document.getElementById("mobileCardsPedidos");
+  if (!tbody || !mobileCards) return;
 
   try {
     const response = await fetch(`${API_URL}/pedidos`);
@@ -133,6 +148,7 @@ async function preencherTabelaPedidos() {
       throw new Error(`Erro HTTP: ${response.status}`);
     }
     const pedidos = await response.json();
+    // Tabela (desktop)
     tbody.innerHTML =
       pedidos.length > 0
         ? pedidos
@@ -148,14 +164,10 @@ async function preencherTabelaPedidos() {
                 pedido.status
               )}</span></td>
             <td>
-                <button class="btn btn-secondary" onclick="editarPedido(${
-                  pedido.id
-                })" title="Editar">
+                <button class="btn btn-secondary" onclick="editarPedido(${pedido.id})" title="Editar">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-danger" onclick="excluirPedido(${
-                  pedido.id
-                })" title="Excluir">
+                <button class="btn btn-danger" onclick="excluirPedido(${pedido.id})" title="Excluir">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -164,14 +176,38 @@ async function preencherTabelaPedidos() {
             )
             .join("")
         : '<tr><td colspan="7">Nenhum pedido encontrado.</td></tr>';
+    // Cards (mobile)
+    mobileCards.innerHTML =
+      pedidos.length > 0
+        ? pedidos
+            .map(
+              (pedido) => `
+        <div class="mobile-card">
+          <div><b>ID:</b> #${pedido.id.toString().padStart(3, "0")}</div>
+          <div><b>Cliente:</b> ${pedido.cliente}</div>
+          <div><b>Produto:</b> ${pedido.produto}</div>
+          <div><b>Quantidade:</b> ${pedido.quantidade} unid.</div>
+          <div><b>Valor:</b> R$ ${parseFloat(pedido.valor).toFixed(2).replace(".", ",")}</div>
+          <div><span class="status-badge ${pedido.status}">${capitalizar(pedido.status)}</span></div>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-secondary" onclick="editarPedido(${pedido.id})" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="excluirPedido(${pedido.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `
+            )
+            .join("")
+        : '<div class="mobile-card">Nenhum pedido encontrado.</div>';
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7">Erro ao carregar pedidos: ${err.message}</td></tr>`;
+    mobileCards.innerHTML = `<div class="mobile-card">Erro ao carregar pedidos: ${err.message}</div>`;
   }
 }
 
 async function preencherTabelaProdutos() {
   const tbody = document.getElementById("corpoTabelaProdutos");
-  if (!tbody) return;
+  const mobileCards = document.getElementById("mobileCardsProdutos");
+  if (!tbody || !mobileCards) return;
 
   try {
     const response = await fetch(`${API_URL}/produtos`);
@@ -179,6 +215,7 @@ async function preencherTabelaProdutos() {
       throw new Error(`Erro HTTP: ${response.status}`);
     }
     const produtos = await response.json();
+    // Tabela (desktop)
     tbody.innerHTML =
       produtos.length > 0
         ? produtos
@@ -196,14 +233,10 @@ async function preencherTabelaProdutos() {
                 produto.status
               )}</span></td>
             <td>
-                <button class="btn btn-secondary" onclick="editarProduto(${
-                  produto.id
-                })" title="Editar">
+                <button class="btn btn-secondary" onclick="editarProduto(${produto.id})" title="Editar">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-danger" onclick="excluirProduto(${
-                  produto.id
-                })" title="Excluir">
+                <button class="btn btn-danger" onclick="excluirProduto(${produto.id})" title="Excluir">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -212,14 +245,38 @@ async function preencherTabelaProdutos() {
             )
             .join("")
         : '<tr><td colspan="7">Nenhum produto encontrado.</td></tr>';
+    // Cards (mobile)
+    mobileCards.innerHTML =
+      produtos.length > 0
+        ? produtos
+            .map(
+              (produto) => `
+        <div class="mobile-card">
+          <div><b>ID:</b> #${produto.id.toString().padStart(3, "0")}</div>
+          <div><b>Nome:</b> ${produto.nome}</div>
+          <div><b>Categoria:</b> ${produto.categoria}</div>
+          <div><b>Preço:</b> R$ ${parseFloat(produto.preco).toFixed(2).replace(".", ",")}</div>
+          <div><b>Estoque:</b> ${produto.estoque} unid.</div>
+          <div><span class="status-badge ${produto.status}">${capitalizar(produto.status)}</span></div>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-secondary" onclick="editarProduto(${produto.id})" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="excluirProduto(${produto.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `
+            )
+            .join("")
+        : '<div class="mobile-card">Nenhum produto encontrado.</div>';
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7">Erro ao carregar produtos: ${err.message}</td></tr>`;
+    mobileCards.innerHTML = `<div class="mobile-card">Erro ao carregar produtos: ${err.message}</div>`;
   }
 }
 
 async function preencherTabelaCustos() {
   const tbody = document.getElementById("corpoTabelaCustos");
-  if (!tbody) return;
+  const mobileCards = document.getElementById("mobileCardsCustos");
+  if (!tbody || !mobileCards) return;
 
   try {
     const response = await fetch(`${API_URL}/custos`);
@@ -227,6 +284,7 @@ async function preencherTabelaCustos() {
       throw new Error(`Erro HTTP: ${response.status}`);
     }
     const custos = await response.json();
+    // Tabela (desktop)
     tbody.innerHTML =
       custos.length > 0
         ? custos
@@ -242,14 +300,10 @@ async function preencherTabelaCustos() {
                 custo.tipo
               )}</span></td>
             <td>
-                <button class="btn btn-secondary" onclick="editarCusto(${
-                  custo.id
-                })" title="Editar">
+                <button class="btn btn-secondary" onclick="editarCusto(${custo.id})" title="Editar">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-danger" onclick="excluirCusto(${
-                  custo.id
-                })" title="Excluir">
+                <button class="btn btn-danger" onclick="excluirCusto(${custo.id})" title="Excluir">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -258,8 +312,31 @@ async function preencherTabelaCustos() {
             )
             .join("")
         : '<tr><td colspan="7">Nenhum custo encontrado.</td></tr>';
+    // Cards (mobile)
+    mobileCards.innerHTML =
+      custos.length > 0
+        ? custos
+            .map(
+              (custo) => `
+        <div class="mobile-card">
+          <div><b>ID:</b> #${custo.id.toString().padStart(3, "0")}</div>
+          <div><b>Descrição:</b> ${custo.descricao}</div>
+          <div><b>Categoria:</b> ${custo.categoria}</div>
+          <div><b>Valor:</b> R$ ${parseFloat(custo.valor).toFixed(2).replace(".", ",")}</div>
+          <div><b>Data:</b> ${formatarData(custo.data)}</div>
+          <div><span class="status-badge ${custo.tipo}">${capitalizar(custo.tipo)}</span></div>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-secondary" onclick="editarCusto(${custo.id})" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="excluirCusto(${custo.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `
+            )
+            .join("")
+        : '<div class="mobile-card">Nenhum custo encontrado.</div>';
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7">Erro ao carregar custos: ${err.message}</td></tr>`;
+    mobileCards.innerHTML = `<div class="mobile-card">Erro ao carregar custos: ${err.message}</div>`;
   }
 }
 
