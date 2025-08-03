@@ -1,15 +1,60 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
+const cookieParser = require('cookie-parser');
+const { autenticar } = require('./autenticacao');
 const app = express();
 const port = 3000;
 
 app.use(express.json());
+app.use(cookieParser());
+// Protege o acesso ao sistema.html (apenas logado pode acessar)
+app.get('/sistema.html', autenticar, (req, res, next) => {
+  res.sendFile(__dirname + '/public/sistema.html');
+});
 app.use(express.static("public"));
 
 // Conexão com o banco de dados SQLite
 const db = new sqlite3.Database("database.db");
 
 db.serialize(() => {
+  // Tabela de usuários para login
+  db.run(`
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      senha TEXT NOT NULL
+    )
+  `);
+
+  // Usuário padrão (admin:admin123) só será inserido se não existir
+  db.get("SELECT id FROM usuarios WHERE username = ?", ["admin"], (err, row) => {
+    if (!row) {
+      db.run(
+        `INSERT INTO usuarios (username, senha) VALUES (?, ?)`,
+        ["admin", "admin123"]
+      );
+    }
+  });
+// Rota de login (autenticação simples)
+app.post("/api/login", (req, res) => {
+  const { username, senha } = req.body;
+  db.get(
+    "SELECT * FROM usuarios WHERE username = ? AND senha = ?",
+    [username, senha],
+    (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!row) return res.status(401).json({ error: "Usuário ou senha inválidos" });
+      // Define cookie de sessão simples
+      res.cookie('user', JSON.stringify({ id: row.id, username: row.username }), { httpOnly: true });
+      res.json({ message: "Login realizado com sucesso", user: { id: row.id, username: row.username } });
+    }
+  );
+});
+// Rota de logout
+app.post('/api/logout', (req, res) => {
+  res.clearCookie('user');
+  res.json({ message: 'Logout realizado com sucesso' });
+});
   // Criar tabelas se não existirem (com a coluna 'data' incluída)
   db.run(`
     CREATE TABLE IF NOT EXISTS pedidos (
