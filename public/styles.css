@@ -618,7 +618,7 @@ body {
   bottom: 0;
   width: 100vw;
   height: 60px;
-  background: var(--cor-card);
+  background: hsl(31.5, 24.4%, 32.2%);
   border-top: 1px solid var(--cor-borda);
   box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
   z-index: 3000;
