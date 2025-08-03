@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nutella Cookies Hub - Sistema de Gerenciamento</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-container">
+            <h2 class="brand-title">Cookies</h2>
+          </div>
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <ul class="nav-menu">
+            <li class="nav-item">
+              <div class="nav-link active" data-section="dashboard">
+                <i class="fas fa-chart-pie"></i>
+                <span class="nav-text">Dashboard</span>
+              </div>
+            </li>
+            <li class="nav-item">
+              <div class="nav-link" data-section="pedidos">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="nav-text">Pedidos</span>
+              </div>
+            </li>
+            <li class="nav-item">
+              <div class="nav-link" data-section="produtos">
+                <i class="fas fa-cookie-bite"></i>
+                <span class="nav-text">Produtos</span>
+              </div>
+            </li>
+            <li class="nav-item">
+              <div class="nav-link" data-section="custos">
+                <i class="fas fa-calculator"></i>
+                <span class="nav-text">Custos</span>
+              </div>
+            </li>
+            <li class="nav-item">
+              <div class="nav-link" data-section="lucros">
+                <i class="fas fa-chart-line"></i>
+                <span class="nav-text">Lucros</span>
+              </div>
+            </li>
+            <li class="nav-item">
+              <div class="nav-link" data-section="analises">
+                <i class="fas fa-chart-bar"></i>
+                <span class="nav-text">Análises</span>
+              </div>
+            </li>
+            <li class="nav-item">
+              <div class="nav-link" data-section="configuracoes">
+                <i class="fas fa-cog"></i>
+                <span class="nav-text">Configurações</span>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+          <div class="header-content">
+            <h1 class="section-title" id="sectionTitle">Dashboard</h1>
+            <p class="section-description" id="sectionDescription">
+              Visão geral do negócio
+            </p>
+          </div>
+          <div class="logo">
+            <img src="./imagens/logo.png" alt="logo" class="img-logo" />
+          </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-area" id="contentArea">
+          <!-- Dashboard Content -->
+          <div id="dashboard-content" class="section-content active">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Vendas Totais</h3>
+                </div>
+                <div class="card-body">
+                  <p id="vendasTotais" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Pedidos Totais</h3>
+                </div>
+                <div class="card-body">
+                  <p id="pedidosTotais" class="metric-value">0</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Produtos em Estoque</h3>
+                </div>
+                <div class="card-body">
+                  <p id="produtosEstoque" class="metric-value">0</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Custos Totais</h3>
+                </div>
+                <div class="card-body">
+                  <p id="custosTotais" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-section">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Vendas dos Últimos 7 Dias</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="vendasChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pedidos Content -->
+          <div id="pedidos-content" class="section-content">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Total de Pedidos</h3>
+                </div>
+                <div class="card-body">
+                  <p id="pedidosTotaisPedidos" class="metric-value">0</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Pedidos Pendentes</h3>
+                </div>
+                <div class="card-body">
+                  <p id="pedidosPendentes" class="metric-value">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-primary" onclick="novoPedido()">
+                <i class="fas fa-plus"></i> Novo Pedido
+              </button>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Lista de Pedidos</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="tabelaPedidos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaPedidos">
+                      <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Produtos Content -->
+          <div id="produtos-content" class="section-content">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Total de Produtos</h3>
+                </div>
+                <div class="card-body">
+                  <p id="totalProdutos" class="metric-value">0</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Produtos Ativos</h3>
+                </div>
+                <div class="card-body">
+                  <p id="produtosAtivos" class="metric-value">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-primary" onclick="novoProduto()">
+                <i class="fas fa-plus"></i> Novo Produto
+              </button>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Catálogo de Produtos</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="tabelaProdutos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Preço</th>
+                        <th>Estoque</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaProdutos">
+                      <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custos Content -->
+          <div id="custos-content" class="section-content">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Custos Totais</h3>
+                </div>
+                <div class="card-body">
+                  <p id="custosTotaisCustos" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Custos Fixos</h3>
+                </div>
+                <div class="card-body">
+                  <p id="custosFixos" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-primary" onclick="novoCusto()">
+                <i class="fas fa-plus"></i> Novo Custo
+              </button>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Controle de Custos</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="tabelaCustos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Descrição</th>
+                        <th>Categoria</th>
+                        <th>Valor</th>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaCustos">
+                      <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lucros Content -->
+          <div id="lucros-content" class="section-content">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Lucro Total</h3>
+                </div>
+                <div class="card-body">
+                  <p id="lucroTotal" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Lucro Médio Mensal</h3>
+                </div>
+                <div class="card-body">
+                  <p id="lucroMedioMensal" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+            </div>
+            <div class="chart-section">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Análise de Lucros</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="lucrosChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Análises Content -->
+          <div id="analises-content" class="section-content">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Total de Vendas</h3>
+                </div>
+                <div class="card-body">
+                  <p id="vendasTotaisAnalises" class="metric-value">R$ 0,00</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <h3>Total de Pedidos</h3>
+                </div>
+                <div class="card-body">
+                  <p id="pedidosTotaisAnalises" class="metric-value">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="analysis-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Produtos Mais Vendidos</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="produtosChart"></canvas>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>Tendência de Vendas</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="tendenciaChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configurações Content -->
+          <div id="configuracoes-content" class="section-content">
+            <div class="dashboard-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Configurações Salvas</h3>
+                </div>
+                <div class="card-body">
+                  <p id="configSalvas" class="metric-value">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="config-grid">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Configurações Gerais</h3>
+                </div>
+                <div class="card-body">
+                  <form class="config-form">
+                    <div class="form-group">
+                      <label for="nomeEmpresa">Nome da Empresa</label>
+                      <input
+                        type="text"
+                        id="nomeEmpresa"
+                        value="Cookies Nutella"
+                        class="form-input"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="emailEmpresa">Email</label>
+                      <input
+                        type="email"
+                        id="emailEmpresa"
+                        value="contato@nutellacookies.com"
+                        class="form-input"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="telefoneEmpresa">Telefone</label>
+                      <input
+                        type="tel"
+                        id="telefoneEmpresa"
+                        value="(11) 99999-9999"
+                        class="form-input"
+                      />
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                      Salvar Configurações
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal para Novos Itens -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="fecharModal()">&times;</span>
+        <h2 id="modalTitle">Novo Item</h2>
+        <form id="modalForm">
+          <div id="modalFields">
+            <!-- Campos serão inseridos dinamicamente -->
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="fecharModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
