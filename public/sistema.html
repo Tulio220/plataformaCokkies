@@ -10,7 +10,6 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   </head>
   <body>
     <div class="container">
@@ -18,7 +17,8 @@
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="logo-container">
-            <h2 class="brand-title">Cookies</h2>
+            <div class="logo">NC</div>
+            <h2 class="brand-title">Nutella Cookies Hub</h2>
           </div>
           <button class="sidebar-toggle" id="sidebarToggle">
             <i class="fas fa-bars"></i>
@@ -167,6 +167,11 @@
                 </div>
               </div>
             </div>
+            <div
+              class="mobile-cards"
+              id="mobileCardsDashboard"
+              style="display: none"
+            ></div>
           </div>
 
           <!-- Pedidos Content -->
@@ -199,27 +204,31 @@
               <div class="card-header">
                 <h3>Lista de Pedidos</h3>
               </div>
-            <div class="card-body">
-              <div class="table-container">
-                <table class="data-table" id="tabelaPedidos">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Cliente</th>
-                      <th>Produto</th>
-                      <th>Quantidade</th>
-                      <th>Valor</th>
-                      <th>Status</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody id="corpoTabelaPedidos">
-                    <!-- Dados serão inseridos via JavaScript -->
-                  </tbody>
-                </table>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="tabelaPedidos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaPedidos">
+                      <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  class="mobile-cards"
+                  id="mobileCardsPedidos"
+                  style="display: none"
+                ></div>
               </div>
-              <div class="mobile-cards" id="mobileCardsPedidos" style="display:none"></div>
-            </div>
             </div>
           </div>
 
@@ -253,27 +262,31 @@
               <div class="card-header">
                 <h3>Catálogo de Produtos</h3>
               </div>
-            <div class="card-body">
-              <div class="table-container">
-                <table class="data-table" id="tabelaProdutos">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Nome</th>
-                      <th>Categoria</th>
-                      <th>Preço</th>
-                      <th>Estoque</th>
-                      <th>Status</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody id="corpoTabelaProdutos">
-                    <!-- Dados serão inseridos via JavaScript -->
-                  </tbody>
-                </table>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="tabelaProdutos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Preço</th>
+                        <th>Estoque</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaProdutos">
+                      <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  class="mobile-cards"
+                  id="mobileCardsProdutos"
+                  style="display: none"
+                ></div>
               </div>
-              <div class="mobile-cards" id="mobileCardsProdutos" style="display:none"></div>
-            </div>
             </div>
           </div>
 
@@ -307,27 +320,31 @@
               <div class="card-header">
                 <h3>Controle de Custos</h3>
               </div>
-            <div class="card-body">
-              <div class="table-container">
-                <table class="data-table" id="tabelaCustos">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Descrição</th>
-                      <th>Categoria</th>
-                      <th>Valor</th>
-                      <th>Data</th>
-                      <th>Tipo</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody id="corpoTabelaCustos">
-                    <!-- Dados serão inseridos via JavaScript -->
-                  </tbody>
-                </table>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="tabelaCustos">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Descrição</th>
+                        <th>Categoria</th>
+                        <th>Valor</th>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaCustos">
+                      <!-- Dados serão inseridos via JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  class="mobile-cards"
+                  id="mobileCardsCustos"
+                  style="display: none"
+                ></div>
               </div>
-              <div class="mobile-cards" id="mobileCardsCustos" style="display:none"></div>
-            </div>
             </div>
           </div>
 
@@ -361,6 +378,11 @@
                 </div>
               </div>
             </div>
+            <div
+              class="mobile-cards"
+              id="mobileCardsLucros"
+              style="display: none"
+            ></div>
           </div>
 
           <!-- Análises Content -->
@@ -392,7 +414,6 @@
                   <canvas id="produtosChart"></canvas>
                 </div>
               </div>
-
               <div class="card">
                 <div class="card-header">
                   <h3>Tendência de Vendas</h3>
@@ -402,6 +423,11 @@
                 </div>
               </div>
             </div>
+            <div
+              class="mobile-cards"
+              id="mobileCardsAnalises"
+              style="display: none"
+            ></div>
           </div>
 
           <!-- Configurações Content -->
@@ -428,7 +454,7 @@
                       <input
                         type="text"
                         id="nomeEmpresa"
-                        value="Cookies Nutella"
+                        value="Nutella Cookies Hub"
                         class="form-input"
                       />
                     </div>
@@ -457,6 +483,11 @@
                 </div>
               </div>
             </div>
+            <div
+              class="mobile-cards"
+              id="mobileCardsConfiguracoes"
+              style="display: none"
+            ></div>
           </div>
         </div>
       </main>
