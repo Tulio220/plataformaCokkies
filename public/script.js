@@ -1,8 +1,8 @@
 // Sistema de Gerenciamento Nutella Cookies Hub
 // Desenvolvido com JavaScript vanilla
 
-// URL base da API
-const API_URL = "http://localhost:3000/api";
+// URL base da API (usar sempre relativa para funcionar local e no Render)
+const API_URL = "/api";
 
 // ========== CONFIGURAÇÕES GLOBAIS ==========
 let sidebarAberta = true;

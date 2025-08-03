@@ -11,6 +11,10 @@ app.use(cookieParser());
 app.get('/sistema.html', autenticar, (req, res, next) => {
   res.sendFile(__dirname + '/public/sistema.html');
 });
+// Redireciona a raiz para a tela de login
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
 app.use(express.static("public"));
 
 // Conexão com o banco de dados SQLite
