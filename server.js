@@ -98,7 +98,7 @@ async function startServer() {
     }
     console.log("Tabelas e dados iniciais criados com sucesso");
 
-    // Iniciar servidor
+    // Iniciar servidor e atribuir globalmente
     server = app.listen(port, "0.0.0.0", () => {
       console.log(`Servidor rodando na porta ${port}`);
     });
