@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 process.on("unhandledRejection", (err) => {
-  console.error("Unhandled Rejection:", err);
+  console.error("Rejeição não tratada:", err);
 });
 
 app.use(express.json());
@@ -22,8 +22,18 @@ app.use(express.static("public"));
 // Conexão com o banco de dados PostgreSQL (Railway)
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Force SSL for Railway
+  ssl: { rejectUnauthorized: false }, // Forçar SSL para Railway
 });
+
+// Verificar conexão com o banco de dados
+async function checkDatabaseConnection() {
+  try {
+    await db.query("SELECT 1");
+    console.log("Conexão com o banco de dados estabelecida com sucesso");
+  } catch (err) {
+    console.error("Erro ao conectar ao banco de dados:", err);
+  }
+}
 
 // Criação das tabelas (executar apenas uma vez, depois pode comentar)
 async function criarTabelas() {
@@ -88,11 +98,16 @@ async function criarTabelas() {
       );
     }
   } catch (err) {
-    console.error("Database setup error:", err);
+    console.error("Erro na criação das tabelas:", err);
   }
 }
+
+// Executar verificação de conexão e criação de tabelas
+checkDatabaseConnection().catch((err) =>
+  console.error("Falha na verificação da conexão:", err)
+);
 criarTabelas().catch((err) =>
-  console.error("Failed to initialize database:", err)
+  console.error("Falha na inicialização do banco:", err)
 );
 
 // Ignorar requisição de favicon
