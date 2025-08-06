@@ -1,87 +1,100 @@
 const express = require("express");
 const { Pool } = require("pg");
-const cookieParser = require('cookie-parser');
-const { autenticar } = require('./autenticacao');
+const cookieParser = require("cookie-parser");
+const { autenticar } = require("./autenticacao");
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(cookieParser());
-app.get('/sistema.html', autenticar, (req, res, next) => {
-  res.sendFile(__dirname + '/public/sistema.html');
+app.get("/sistema.html", autenticar, (req, res, next) => {
+  res.sendFile(__dirname + "/public/sistema.html");
 });
-app.get('/', (req, res) => {
-  res.redirect('/login.html');
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
 });
 app.use(express.static("public"));
 
 // Conexão com o banco de dados PostgreSQL (Railway)
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false }, // Force SSL for Railway
 });
 
 // Criação das tabelas (executar apenas uma vez, depois pode comentar)
 async function criarTabelas() {
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS usuarios (
-      id SERIAL PRIMARY KEY,
-      username TEXT NOT NULL UNIQUE,
-      senha TEXT NOT NULL
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        senha TEXT NOT NULL
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS produtos (
+        id SERIAL PRIMARY KEY,
+        nome TEXT NOT NULL UNIQUE,
+        categoria TEXT NOT NULL,
+        preco REAL NOT NULL,
+        estoque INTEGER NOT NULL,
+        status TEXT NOT NULL
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS pedidos (
+        id SERIAL PRIMARY KEY,
+        cliente TEXT NOT NULL,
+        produto TEXT NOT NULL,
+        quantidade INTEGER NOT NULL,
+        valor REAL NOT NULL,
+        status TEXT NOT NULL,
+        data TIMESTAMP
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS custos (
+        id SERIAL PRIMARY KEY,
+        descricao TEXT NOT NULL,
+        categoria TEXT NOT NULL,
+        valor REAL NOT NULL,
+        data DATE NOT NULL,
+        tipo TEXT NOT NULL
+      );
+    `);
+    // Usuário admin padrão
+    const admin = await db.query(
+      "SELECT id FROM usuarios WHERE username = $1",
+      ["admin"]
     );
-  `);
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS produtos (
-      id SERIAL PRIMARY KEY,
-      nome TEXT NOT NULL UNIQUE,
-      categoria TEXT NOT NULL,
-      preco REAL NOT NULL,
-      estoque INTEGER NOT NULL,
-      status TEXT NOT NULL
-    );
-  `);
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS pedidos (
-      id SERIAL PRIMARY KEY,
-      cliente TEXT NOT NULL,
-      produto TEXT NOT NULL,
-      quantidade INTEGER NOT NULL,
-      valor REAL NOT NULL,
-      status TEXT NOT NULL,
-      data TIMESTAMP
-    );
-  `);
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS custos (
-      id SERIAL PRIMARY KEY,
-      descricao TEXT NOT NULL,
-      categoria TEXT NOT NULL,
-      valor REAL NOT NULL,
-      data DATE NOT NULL,
-      tipo TEXT NOT NULL
-    );
-  `);
-  // Usuário admin padrão
-  const admin = await db.query('SELECT id FROM usuarios WHERE username = $1', ['admin']);
-  if (admin.rowCount === 0) {
-    await db.query('INSERT INTO usuarios (username, senha) VALUES ($1, $2)', ['admin', 'admin123']);
-  }
-  // Produto inicial
-  const prod = await db.query('SELECT id FROM produtos WHERE nome = $1', ['Cookie Tradicional']);
-  if (prod.rowCount === 0) {
-    await db.query('INSERT INTO produtos (nome, categoria, preco, estoque, status) VALUES ($1, $2, $3, $4, $5)', [
-      'Cookie Tradicional', 'Tradicional', 5.0, 100, 'ativo',
+    if (admin.rowCount === 0) {
+      await db.query("INSERT INTO usuarios (username, senha) VALUES ($1, $2)", [
+        "admin",
+        "admin123",
+      ]);
+    }
+    // Produto inicial
+    const prod = await db.query("SELECT id FROM produtos WHERE nome = $1", [
+      "Cookie Tradicional",
     ]);
+    if (prod.rowCount === 0) {
+      await db.query(
+        "INSERT INTO produtos (nome, categoria, preco, estoque, status) VALUES ($1, $2, $3, $4, $5)",
+        ["Cookie Tradicional", "Tradicional", 5.0, 100, "ativo"]
+      );
+    }
+  } catch (err) {
+    console.error("Database setup error:", err);
   }
 }
-criarTabelas();
+criarTabelas().catch((err) =>
+  console.error("Failed to initialize database:", err)
+);
 
 // Ignorar requisição de favicon
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 // Rotas para Pedidos
-
-// Rotas para Pedidos (async/await)
 app.get("/api/pedidos", async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM pedidos");
@@ -93,8 +106,11 @@ app.get("/api/pedidos", async (req, res) => {
 
 app.get("/api/pedidos/:id", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM pedidos WHERE id = $1", [req.params.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
+    const result = await db.query("SELECT * FROM pedidos WHERE id = $1", [
+      req.params.id,
+    ]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Pedido não encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -121,7 +137,8 @@ app.put("/api/pedidos/:id", async (req, res) => {
       "UPDATE pedidos SET cliente = $1, produto = $2, quantidade = $3, valor = $4, status = $5, data = NOW() WHERE id = $6 RETURNING *",
       [cliente, produto, quantidade, valor, status, req.params.id]
     );
-    if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Pedido não encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -130,8 +147,11 @@ app.put("/api/pedidos/:id", async (req, res) => {
 
 app.delete("/api/pedidos/:id", async (req, res) => {
   try {
-    const result = await db.query("DELETE FROM pedidos WHERE id = $1", [req.params.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
+    const result = await db.query("DELETE FROM pedidos WHERE id = $1", [
+      req.params.id,
+    ]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Pedido não encontrado" });
     res.json({ message: "Pedido excluído" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -150,8 +170,11 @@ app.get("/api/produtos", async (req, res) => {
 
 app.get("/api/produtos/:id", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM produtos WHERE id = $1", [req.params.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "Produto não encontrado" });
+    const result = await db.query("SELECT * FROM produtos WHERE id = $1", [
+      req.params.id,
+    ]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Produto não encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -194,8 +217,6 @@ app.delete("/api/produtos/:id", async (req, res) => {
 });
 
 // Rotas para Custos
-
-// Rotas para Custos (async/await)
 app.get("/api/custos", async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM custos");
@@ -207,8 +228,11 @@ app.get("/api/custos", async (req, res) => {
 
 app.get("/api/custos/:id", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM custos WHERE id = $1", [req.params.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
+    const result = await db.query("SELECT * FROM custos WHERE id = $1", [
+      req.params.id,
+    ]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Custo não encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -235,7 +259,8 @@ app.put("/api/custos/:id", async (req, res) => {
       "UPDATE custos SET descricao = $1, categoria = $2, valor = $3, data = $4, tipo = $5 WHERE id = $6 RETURNING *",
       [descricao, categoria, valor, data, tipo, req.params.id]
     );
-    if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Custo não encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -244,15 +269,18 @@ app.put("/api/custos/:id", async (req, res) => {
 
 app.delete("/api/custos/:id", async (req, res) => {
   try {
-    const result = await db.query("DELETE FROM custos WHERE id = $1", [req.params.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
+    const result = await db.query("DELETE FROM custos WHERE id = $1", [
+      req.params.id,
+    ]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Custo não encontrado" });
     res.json({ message: "Custo excluído" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Rotas para Dados Analíticos (Dinâmicas com Banco)
+// Rotas para Dados Analíticos
 app.get("/api/vendas", (req, res) => {
   db.query(
     "SELECT to_char(data, 'YYYY-MM-DD') as data, COALESCE(SUM(valor), 0) as valor FROM pedidos GROUP BY data",
@@ -333,7 +361,11 @@ app.get("/api/produtos-vendidos", (req, res) => {
         return res.status(500).json({ error: err.message });
       }
       console.log("Dados de produtos vendidos:", result.rows);
-      res.json(result.rows.length > 0 ? result.rows : [{ produto: "Nenhum", quantidade: 0 }]);
+      res.json(
+        result.rows.length > 0
+          ? result.rows
+          : [{ produto: "Nenhum", quantidade: 0 }]
+      );
     }
   );
 });
@@ -397,6 +429,6 @@ app.get("/api/dashboard", (req, res) => {
   );
 });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
