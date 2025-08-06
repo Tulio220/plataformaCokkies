@@ -80,52 +80,62 @@ criarTabelas();
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 // Rotas para Pedidos
-app.get("/api/pedidos", (req, res) => {
-  db.query("SELECT * FROM pedidos", [], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+
+// Rotas para Pedidos (async/await)
+app.get("/api/pedidos", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM pedidos");
     res.json(result.rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/api/pedidos/:id", (req, res) => {
-  db.query("SELECT * FROM pedidos WHERE id = $1", [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get("/api/pedidos/:id", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM pedidos WHERE id = $1", [req.params.id]);
     if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
     res.json(result.rows[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/api/pedidos", (req, res) => {
+app.post("/api/pedidos", async (req, res) => {
   const { cliente, produto, quantidade, valor, status } = req.body;
-  db.query(
-    "INSERT INTO pedidos (cliente, produto, quantidade, valor, status, data) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *",
-    [cliente, produto, quantidade, valor, status],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json(result.rows[0]);
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO pedidos (cliente, produto, quantidade, valor, status, data) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *",
+      [cliente, produto, quantidade, valor, status]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put("/api/pedidos/:id", (req, res) => {
+app.put("/api/pedidos/:id", async (req, res) => {
   const { cliente, produto, quantidade, valor, status } = req.body;
-  db.query(
-    "UPDATE pedidos SET cliente = $1, produto = $2, quantidade = $3, valor = $4, status = $5, data = NOW() WHERE id = $6 RETURNING *",
-    [cliente, produto, quantidade, valor, status, req.params.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
-      res.json(result.rows[0]);
-    }
-  );
+  try {
+    const result = await db.query(
+      "UPDATE pedidos SET cliente = $1, produto = $2, quantidade = $3, valor = $4, status = $5, data = NOW() WHERE id = $6 RETURNING *",
+      [cliente, produto, quantidade, valor, status, req.params.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete("/api/pedidos/:id", (req, res) => {
-  db.query("DELETE FROM pedidos WHERE id = $1", [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.delete("/api/pedidos/:id", async (req, res) => {
+  try {
+    const result = await db.query("DELETE FROM pedidos WHERE id = $1", [req.params.id]);
     if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
     res.json({ message: "Pedido excluído" });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Rotas para Produtos
@@ -184,52 +194,62 @@ app.delete("/api/produtos/:id", async (req, res) => {
 });
 
 // Rotas para Custos
-app.get("/api/custos", (req, res) => {
-  db.query("SELECT * FROM custos", [], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+
+// Rotas para Custos (async/await)
+app.get("/api/custos", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM custos");
     res.json(result.rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/api/custos/:id", (req, res) => {
-  db.query("SELECT * FROM custos WHERE id = $1", [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get("/api/custos/:id", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM custos WHERE id = $1", [req.params.id]);
     if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
     res.json(result.rows[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/api/custos", (req, res) => {
+app.post("/api/custos", async (req, res) => {
   const { descricao, categoria, valor, data, tipo } = req.body;
-  db.query(
-    "INSERT INTO custos (descricao, categoria, valor, data, tipo) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-    [descricao, categoria, valor, data, tipo],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json(result.rows[0]);
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO custos (descricao, categoria, valor, data, tipo) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [descricao, categoria, valor, data, tipo]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put("/api/custos/:id", (req, res) => {
+app.put("/api/custos/:id", async (req, res) => {
   const { descricao, categoria, valor, data, tipo } = req.body;
-  db.query(
-    "UPDATE custos SET descricao = $1, categoria = $2, valor = $3, data = $4, tipo = $5 WHERE id = $6 RETURNING *",
-    [descricao, categoria, valor, data, tipo, req.params.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
-      res.json(result.rows[0]);
-    }
-  );
+  try {
+    const result = await db.query(
+      "UPDATE custos SET descricao = $1, categoria = $2, valor = $3, data = $4, tipo = $5 WHERE id = $6 RETURNING *",
+      [descricao, categoria, valor, data, tipo, req.params.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete("/api/custos/:id", (req, res) => {
-  db.query("DELETE FROM custos WHERE id = $1", [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.delete("/api/custos/:id", async (req, res) => {
+  try {
+    const result = await db.query("DELETE FROM custos WHERE id = $1", [req.params.id]);
     if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
     res.json({ message: "Custo excluído" });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Rotas para Dados Analíticos (Dinâmicas com Banco)
