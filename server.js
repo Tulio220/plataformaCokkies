@@ -21,6 +21,11 @@ app.get("/", (req, res) => {
 });
 app.use(express.static("public"));
 
+// Ignorar requisições de favicon
+app.get("/favicon.ico", (req, res) => {
+  res.status(204).end(); // Retorna No Content para silenciar
+});
+
 // Conexão com o banco de dados PostgreSQL (Railway)
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -42,8 +47,8 @@ app.post("/api/login", async (req, res) => {
       [username, senha]
     );
     if (result.rowCount === 1) {
-      // Aqui você pode gerar um token ou configurar um cookie para autenticação
-      res.status(200).json({ message: "Login bem-sucedido", success: true });
+      // Redireciona para /sistema.html após login bem-sucedido
+      res.redirect("/sistema.html");
     } else {
       res
         .status(401)
