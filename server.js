@@ -74,7 +74,7 @@ async function criarTabelas() {
     ]);
   }
 }
-criarTabelas();
+// criarTabelas();
 
 // Ignorar requisição de favicon
 app.get("/favicon.ico", (req, res) => res.status(204).end());
