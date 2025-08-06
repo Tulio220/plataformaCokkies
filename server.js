@@ -107,6 +107,11 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
 
+// Manter o processo vivo
+setInterval(() => {
+  console.log("Mantendo o processo ativo...", new Date().toISOString());
+}, 60000); // Loga a cada 1 minuto para manter o processo ativo
+
 // Executar verificação de conexão e criação de tabelas
 checkDatabaseConnection().catch((err) =>
   console.error("Falha na verificação da conexão:", err)
