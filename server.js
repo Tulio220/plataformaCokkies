@@ -1,290 +1,251 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
+const { Pool } = require("pg");
 const cookieParser = require('cookie-parser');
 const { autenticar } = require('./autenticacao');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cookieParser());
-// Protege o acesso ao sistema.html (apenas logado pode acessar)
 app.get('/sistema.html', autenticar, (req, res, next) => {
   res.sendFile(__dirname + '/public/sistema.html');
 });
-// Redireciona a raiz para a tela de login
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 app.use(express.static("public"));
 
-// Conexão com o banco de dados SQLite
-const db = new sqlite3.Database("database.db");
+// Conexão com o banco de dados PostgreSQL (Railway)
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSLMODE ? { rejectUnauthorized: false } : false,
+});
 
-db.serialize(() => {
-  // Tabela de usuários para login
-  db.run(`
+// Criação das tabelas (executar apenas uma vez, depois pode comentar)
+async function criarTabelas() {
+  await db.query(`
     CREATE TABLE IF NOT EXISTS usuarios (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       username TEXT NOT NULL UNIQUE,
       senha TEXT NOT NULL
-    )
+    );
   `);
-
-  // Usuário padrão (admin:admin123) só será inserido se não existir
-  db.get("SELECT id FROM usuarios WHERE username = ?", ["admin"], (err, row) => {
-    if (!row) {
-      db.run(
-        `INSERT INTO usuarios (username, senha) VALUES (?, ?)`,
-        ["admin", "admin123"]
-      );
-    }
-  });
-// Rota de login (autenticação simples)
-app.post("/api/login", (req, res) => {
-  const { username, senha } = req.body;
-  db.get(
-    "SELECT * FROM usuarios WHERE username = ? AND senha = ?",
-    [username, senha],
-    (err, row) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!row) return res.status(401).json({ error: "Usuário ou senha inválidos" });
-      // Define cookie de sessão simples
-      res.cookie('user', JSON.stringify({ id: row.id, username: row.username }), { httpOnly: true });
-      res.json({ message: "Login realizado com sucesso", user: { id: row.id, username: row.username } });
-    }
-  );
-});
-// Rota de logout
-app.post('/api/logout', (req, res) => {
-  res.clearCookie('user');
-  res.json({ message: 'Logout realizado com sucesso' });
-});
-  // Criar tabelas se não existirem (com a coluna 'data' incluída)
-  db.run(`
-    CREATE TABLE IF NOT EXISTS pedidos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      cliente TEXT NOT NULL,
-      produto TEXT NOT NULL,
-      quantidade INTEGER NOT NULL,
-      valor REAL NOT NULL,
-      status TEXT NOT NULL,
-      data TEXT
-    )
-  `);
-
-  db.run(`
+  await db.query(`
     CREATE TABLE IF NOT EXISTS produtos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL UNIQUE,
       categoria TEXT NOT NULL,
       preco REAL NOT NULL,
       estoque INTEGER NOT NULL,
       status TEXT NOT NULL
-    )
+    );
   `);
-
-  db.run(`
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS pedidos (
+      id SERIAL PRIMARY KEY,
+      cliente TEXT NOT NULL,
+      produto TEXT NOT NULL,
+      quantidade INTEGER NOT NULL,
+      valor REAL NOT NULL,
+      status TEXT NOT NULL,
+      data TIMESTAMP
+    );
+  `);
+  await db.query(`
     CREATE TABLE IF NOT EXISTS custos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       descricao TEXT NOT NULL,
       categoria TEXT NOT NULL,
       valor REAL NOT NULL,
-      data TEXT NOT NULL,
+      data DATE NOT NULL,
       tipo TEXT NOT NULL
-    )
+    );
   `);
-
-  // Migração: Adicionar coluna 'data' sem valor padrão e preencher com data atual
-  db.run("ALTER TABLE pedidos ADD COLUMN data TEXT", (err) => {
-    if (err && !err.message.includes("duplicate column name")) {
-      console.error("Erro na migração da coluna 'data':", err.message);
-    } else if (!err) {
-      console.log(
-        "Coluna 'data' adicionada com sucesso. Atualizando valores..."
-      );
-      db.run(
-        "UPDATE pedidos SET data = datetime('now') WHERE data IS NULL",
-        (err) => {
-          if (err)
-            console.error("Erro ao atualizar valores de 'data':", err.message);
-          else console.log("Valores de 'data' atualizados com sucesso.");
-        }
-      );
-    }
-  });
-
-  // Dados iniciais (opcional)
-  // Produto inicial só será inserido se não existir produto com mesmo nome
-  db.get("SELECT id FROM produtos WHERE nome = ?", ["Cookie Tradicional"], (err, row) => {
-    if (!row) {
-      db.run(
-        `INSERT INTO produtos (nome, categoria, preco, estoque, status) VALUES (?, ?, ?, ?, ?)`,
-        ["Cookie Tradicional", "Tradicional", 5.0, 100, "ativo"]
-      );
-    }
-  });
-});
+  // Usuário admin padrão
+  const admin = await db.query('SELECT id FROM usuarios WHERE username = $1', ['admin']);
+  if (admin.rowCount === 0) {
+    await db.query('INSERT INTO usuarios (username, senha) VALUES ($1, $2)', ['admin', 'admin123']);
+  }
+  // Produto inicial
+  const prod = await db.query('SELECT id FROM produtos WHERE nome = $1', ['Cookie Tradicional']);
+  if (prod.rowCount === 0) {
+    await db.query('INSERT INTO produtos (nome, categoria, preco, estoque, status) VALUES ($1, $2, $3, $4, $5)', [
+      'Cookie Tradicional', 'Tradicional', 5.0, 100, 'ativo',
+    ]);
+  }
+}
+criarTabelas();
 
 // Ignorar requisição de favicon
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 // Rotas para Pedidos
 app.get("/api/pedidos", (req, res) => {
-  db.all("SELECT * FROM pedidos", [], (err, rows) => {
+  db.query("SELECT * FROM pedidos", [], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    res.json(result.rows);
   });
 });
 
 app.get("/api/pedidos/:id", (req, res) => {
-  db.get("SELECT * FROM pedidos WHERE id = ?", [req.params.id], (err, row) => {
+  db.query("SELECT * FROM pedidos WHERE id = $1", [req.params.id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: "Pedido não encontrado" });
-    res.json(row);
+    if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
+    res.json(result.rows[0]);
   });
 });
 
 app.post("/api/pedidos", (req, res) => {
   const { cliente, produto, quantidade, valor, status } = req.body;
-  db.run(
-    "INSERT INTO pedidos (cliente, produto, quantidade, valor, status, data) VALUES (?, ?, ?, ?, ?, datetime('now'))",
+  db.query(
+    "INSERT INTO pedidos (cliente, produto, quantidade, valor, status, data) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *",
     [cliente, produto, quantidade, valor, status],
-    function (err) {
+    (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res
-        .status(201)
-        .json({ id: this.lastID, ...req.body, data: new Date().toISOString() });
+      res.status(201).json(result.rows[0]);
     }
   );
 });
 
 app.put("/api/pedidos/:id", (req, res) => {
   const { cliente, produto, quantidade, valor, status } = req.body;
-  db.run(
-    "UPDATE pedidos SET cliente = ?, produto = ?, quantidade = ?, valor = ?, status = ?, data = datetime('now') WHERE id = ?",
+  db.query(
+    "UPDATE pedidos SET cliente = $1, produto = $2, quantidade = $3, valor = $4, status = $5, data = NOW() WHERE id = $6 RETURNING *",
     [cliente, produto, quantidade, valor, status, req.params.id],
-    (err) => {
+    (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, ...req.body });
+      if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
+      res.json(result.rows[0]);
     }
   );
 });
 
 app.delete("/api/pedidos/:id", (req, res) => {
-  db.run("DELETE FROM pedidos WHERE id = ?", [req.params.id], (err) => {
+  db.query("DELETE FROM pedidos WHERE id = $1", [req.params.id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
+    if (result.rowCount === 0) return res.status(404).json({ error: "Pedido não encontrado" });
     res.json({ message: "Pedido excluído" });
   });
 });
 
 // Rotas para Produtos
-app.get("/api/produtos", (req, res) => {
-  db.all("SELECT * FROM produtos", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+app.get("/api/produtos", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM produtos");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/api/produtos/:id", (req, res) => {
-  db.get("SELECT * FROM produtos WHERE id = ?", [req.params.id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: "Produto não encontrado" });
-    res.json(row);
-  });
+app.get("/api/produtos/:id", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM produtos WHERE id = $1", [req.params.id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: "Produto não encontrado" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/api/produtos", (req, res) => {
+app.post("/api/produtos", async (req, res) => {
   const { nome, categoria, preco, estoque, status } = req.body;
-  db.run(
-    "INSERT INTO produtos (nome, categoria, preco, estoque, status) VALUES (?, ?, ?, ?, ?)",
-    [nome, categoria, preco, estoque, status],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ id: this.lastID, ...req.body });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO produtos (nome, categoria, preco, estoque, status) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [nome, categoria, preco, estoque, status]
+    );
+    res.status(201).json({ id: result.rows[0].id, ...req.body });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put("/api/produtos/:id", (req, res) => {
+app.put("/api/produtos/:id", async (req, res) => {
   const { nome, categoria, preco, estoque, status } = req.body;
-  db.run(
-    "UPDATE produtos SET nome = ?, categoria = ?, preco = ?, estoque = ?, status = ? WHERE id = ?",
-    [nome, categoria, preco, estoque, status, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, ...req.body });
-    }
-  );
+  try {
+    await db.query(
+      "UPDATE produtos SET nome = $1, categoria = $2, preco = $3, estoque = $4, status = $5 WHERE id = $6",
+      [nome, categoria, preco, estoque, status, req.params.id]
+    );
+    res.json({ id: req.params.id, ...req.body });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete("/api/produtos/:id", (req, res) => {
-  db.run("DELETE FROM produtos WHERE id = ?", [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.delete("/api/produtos/:id", async (req, res) => {
+  try {
+    await db.query("DELETE FROM produtos WHERE id = $1", [req.params.id]);
     res.json({ message: "Produto excluído" });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Rotas para Custos
 app.get("/api/custos", (req, res) => {
-  db.all("SELECT * FROM custos", [], (err, rows) => {
+  db.query("SELECT * FROM custos", [], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    res.json(result.rows);
   });
 });
 
 app.get("/api/custos/:id", (req, res) => {
-  db.get("SELECT * FROM custos WHERE id = ?", [req.params.id], (err, row) => {
+  db.query("SELECT * FROM custos WHERE id = $1", [req.params.id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: "Custo não encontrado" });
-    res.json(row);
+    if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
+    res.json(result.rows[0]);
   });
 });
 
 app.post("/api/custos", (req, res) => {
   const { descricao, categoria, valor, data, tipo } = req.body;
-  db.run(
-    "INSERT INTO custos (descricao, categoria, valor, data, tipo) VALUES (?, ?, ?, ?, ?)",
+  db.query(
+    "INSERT INTO custos (descricao, categoria, valor, data, tipo) VALUES ($1, $2, $3, $4, $5) RETURNING *",
     [descricao, categoria, valor, data, tipo],
-    function (err) {
+    (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ id: this.lastID, ...req.body });
+      res.status(201).json(result.rows[0]);
     }
   );
 });
 
 app.put("/api/custos/:id", (req, res) => {
   const { descricao, categoria, valor, data, tipo } = req.body;
-  db.run(
-    "UPDATE custos SET descricao = ?, categoria = ?, valor = ?, data = ?, tipo = ? WHERE id = ?",
+  db.query(
+    "UPDATE custos SET descricao = $1, categoria = $2, valor = $3, data = $4, tipo = $5 WHERE id = $6 RETURNING *",
     [descricao, categoria, valor, data, tipo, req.params.id],
-    (err) => {
+    (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: req.params.id, ...req.body });
+      if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
+      res.json(result.rows[0]);
     }
   );
 });
 
 app.delete("/api/custos/:id", (req, res) => {
-  db.run("DELETE FROM custos WHERE id = ?", [req.params.id], (err) => {
+  db.query("DELETE FROM custos WHERE id = $1", [req.params.id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
+    if (result.rowCount === 0) return res.status(404).json({ error: "Custo não encontrado" });
     res.json({ message: "Custo excluído" });
   });
 });
 
 // Rotas para Dados Analíticos (Dinâmicas com Banco)
 app.get("/api/vendas", (req, res) => {
-  db.all(
-    "SELECT datetime(data, '-3 hours') as data, COALESCE(SUM(valor), 0) as valor FROM pedidos GROUP BY data",
+  db.query(
+    "SELECT to_char(data, 'YYYY-MM-DD') as data, COALESCE(SUM(valor), 0) as valor FROM pedidos GROUP BY data",
     [],
-    (err, rows) => {
+    (err, result) => {
       if (err) {
         console.error("Erro na consulta de vendas:", err.message);
         return res.status(500).json({ error: err.message });
       }
-      console.log("Dados de vendas:", rows);
+      console.log("Dados de vendas:", result.rows);
       res.json(
-        rows.length > 0
-          ? rows
+        result.rows.length > 0
+          ? result.rows
           : [{ data: new Date().toISOString().split("T")[0], valor: 0 }]
       );
     }
@@ -292,46 +253,47 @@ app.get("/api/vendas", (req, res) => {
 });
 
 app.get("/api/lucros", (req, res) => {
-  db.all(
+  db.query(
     `
-    SELECT strftime('%m', datetime(COALESCE(data, datetime('now', '-3 hours')))) as mes, 
-           COALESCE((SELECT SUM(valor) FROM pedidos), 0) - COALESCE((SELECT SUM(valor) FROM custos), 0) as valor 
+    SELECT to_char(data, 'YYYY-MM') as mes, 
+           COALESCE((SELECT SUM(valor) FROM pedidos WHERE to_char(data, 'YYYY-MM') = mes), 0) - COALESCE((SELECT SUM(valor) FROM custos WHERE to_char(data, 'YYYY-MM') = mes), 0) as valor 
     FROM pedidos 
     GROUP BY mes
+    ORDER BY mes DESC
     LIMIT 1
   `,
     [],
-    (err, rows) => {
+    (err, result) => {
       if (err) {
         console.error("Erro na consulta de lucros:", err.message);
         return res.status(500).json({ error: err.message });
       }
-      console.log("Dados de lucros:", rows);
+      console.log("Dados de lucros:", result.rows);
       res.json(
-        rows.length > 0
-          ? rows.map((row) => ({ mes: row.mes, valor: row.valor || 0 }))
-          : [{ mes: new Date().toISOString().slice(5, 7), valor: 0 }]
+        result.rows.length > 0
+          ? result.rows.map((row) => ({ mes: row.mes, valor: row.valor || 0 }))
+          : [{ mes: new Date().toISOString().slice(0, 7), valor: 0 }]
       );
     }
   );
 });
 
 app.get("/api/tendencias", (req, res) => {
-  db.all(
-    "SELECT strftime('%m', datetime(COALESCE(data, datetime('now', '-3 hours')))) as mes, COALESCE(COUNT(*), 0) as pedidos, COALESCE(SUM(quantidade), 0) as vendas FROM pedidos GROUP BY mes",
+  db.query(
+    "SELECT to_char(data, 'YYYY-MM') as mes, COALESCE(COUNT(*), 0) as pedidos, COALESCE(SUM(quantidade), 0) as vendas FROM pedidos GROUP BY mes ORDER BY mes DESC",
     [],
-    (err, rows) => {
+    (err, result) => {
       if (err) {
         console.error("Erro na consulta de tendências:", err.message);
         return res.status(500).json({ error: err.message });
       }
-      console.log("Dados de tendências:", rows);
+      console.log("Dados de tendências:", result.rows);
       res.json(
-        rows.length > 0
-          ? rows
+        result.rows.length > 0
+          ? result.rows
           : [
               {
-                mes: new Date().toISOString().slice(5, 7),
+                mes: new Date().toISOString().slice(0, 7),
                 vendas: 0,
                 pedidos: 0,
               },
@@ -342,43 +304,43 @@ app.get("/api/tendencias", (req, res) => {
 });
 
 app.get("/api/produtos-vendidos", (req, res) => {
-  db.all(
+  db.query(
     "SELECT produto, COALESCE(SUM(quantidade), 0) as quantidade FROM pedidos GROUP BY produto",
     [],
-    (err, rows) => {
+    (err, result) => {
       if (err) {
         console.error("Erro na consulta de produtos vendidos:", err.message);
         return res.status(500).json({ error: err.message });
       }
-      console.log("Dados de produtos vendidos:", rows);
-      res.json(rows.length > 0 ? rows : [{ produto: "Nenhum", quantidade: 0 }]);
+      console.log("Dados de produtos vendidos:", result.rows);
+      res.json(result.rows.length > 0 ? result.rows : [{ produto: "Nenhum", quantidade: 0 }]);
     }
   );
 });
 
 app.get("/api/dashboard", (req, res) => {
-  db.get(
+  db.query(
     "SELECT COALESCE(COUNT(*), 0) as pedidosTotais FROM pedidos",
     [],
-    (err, row) => {
+    (err, result) => {
       if (err) {
         console.error("Erro na consulta de pedidos totais:", err.message);
         return res.status(500).json({ error: err.message });
       }
-      const pedidosTotais = row.pedidosTotais || 0;
-      db.get(
+      const pedidosTotais = result.rows[0].pedidosTotais || 0;
+      db.query(
         "SELECT COALESCE(SUM(valor), 0) as vendasTotais FROM pedidos",
         [],
-        (err, row) => {
+        (err, result) => {
           if (err) {
             console.error("Erro na consulta de vendas totais:", err.message);
             return res.status(500).json({ error: err.message });
           }
-          const vendasTotais = row.vendasTotais || 0;
-          db.get(
+          const vendasTotais = result.rows[0].vendasTotais || 0;
+          db.query(
             "SELECT COALESCE(COUNT(*), 0) as produtosEstoque FROM produtos WHERE status = 'ativo'",
             [],
-            (err, row) => {
+            (err, result) => {
               if (err) {
                 console.error(
                   "Erro na consulta de produtos em estoque:",
@@ -386,11 +348,11 @@ app.get("/api/dashboard", (req, res) => {
                 );
                 return res.status(500).json({ error: err.message });
               }
-              const produtosEstoque = row.produtosEstoque || 0;
-              db.get(
+              const produtosEstoque = result.rows[0].produtosEstoque || 0;
+              db.query(
                 "SELECT COALESCE(SUM(valor), 0) as custosTotais FROM custos",
                 [],
-                (err, row) => {
+                (err, result) => {
                   if (err) {
                     console.error(
                       "Erro na consulta de custos totais:",
@@ -398,7 +360,7 @@ app.get("/api/dashboard", (req, res) => {
                     );
                     return res.status(500).json({ error: err.message });
                   }
-                  const custosTotais = row.custosTotais || 0;
+                  const custosTotais = result.rows[0].custosTotais || 0;
                   res.json({
                     vendasTotais,
                     pedidosTotais,
