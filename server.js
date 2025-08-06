@@ -32,7 +32,7 @@ async function checkDatabaseConnection() {
     console.log("Conexão com o banco de dados estabelecida com sucesso");
   } catch (err) {
     console.error("Erro ao conectar ao banco de dados:", err);
-    throw err; // Forçar erro para ser capturado
+    throw err;
   }
 }
 
@@ -101,7 +101,7 @@ async function criarTabelas() {
     console.log("Tabelas e dados iniciais criados com sucesso");
   } catch (err) {
     console.error("Erro na criação das tabelas:", err);
-    throw err; // Forçar erro para ser capturado
+    throw err;
   }
 }
 
@@ -118,7 +118,7 @@ async function initializeServer() {
     const server = app.listen(port, "0.0.0.0", () => {
       console.log(`Servidor rodando na porta ${port}`);
     });
-    // Verificação contínua
+    // Verificação contínua mais frequente
     setInterval(async () => {
       try {
         await db.query("SELECT 1");
@@ -129,11 +129,11 @@ async function initializeServer() {
       } catch (err) {
         console.error("Erro na verificação de conexão:", err);
       }
-    }, 30000);
+    }, 15000); // Reduzido para 15 segundos
     return server;
   } catch (err) {
     console.error("Falha na inicialização do servidor:", err);
-    process.exit(1); // Sair com erro se a inicialização falhar
+    process.exit(1);
   }
 }
 
