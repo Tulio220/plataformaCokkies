@@ -107,10 +107,15 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
 
-// Manter o processo vivo
-setInterval(() => {
-  console.log("Mantendo o processo ativo...", new Date().toISOString());
-}, 60000); // Loga a cada 1 minuto para manter o processo ativo
+// Manter o processo vivo com uma verificação leve
+setInterval(async () => {
+  try {
+    await db.query("SELECT 1");
+    console.log("Verificação de conexão ativa em:", new Date().toISOString());
+  } catch (err) {
+    console.error("Erro na verificação de conexão:", err);
+  }
+}, 30000); // Verifica a cada 30 segundos
 
 // Executar verificação de conexão e criação de tabelas
 checkDatabaseConnection().catch((err) =>
@@ -120,6 +125,15 @@ criarTabelas().catch((err) =>
   console.error("Falha na inicialização do banco:", err)
 );
 
-app.listen(port, "0.0.0.0", () => {
+const server = app.listen(port, "0.0.0.0", () => {
   console.log(`Servidor rodando na porta ${port}`);
+});
+
+// Capturar sinais de término para evitar saída abrupta
+process.on("SIGTERM", () => {
+  console.log("Recebido SIGTERM, encerrando servidor...");
+  server.close(() => {
+    console.log("Servidor encerrado.");
+    process.exit(0);
+  });
 });
