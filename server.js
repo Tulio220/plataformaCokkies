@@ -32,10 +32,11 @@ async function checkDatabaseConnection() {
     console.log("Conexão com o banco de dados estabelecida com sucesso");
   } catch (err) {
     console.error("Erro ao conectar ao banco de dados:", err);
+    throw err; // Forçar erro para ser capturado
   }
 }
 
-// Criação das tabelas (executar apenas uma vez, depois pode comentar)
+// Criação das tabelas
 async function criarTabelas() {
   try {
     await db.query(`
@@ -97,8 +98,10 @@ async function criarTabelas() {
         ["Cookie Tradicional", "Tradicional", 5.0, 100, "ativo"]
       );
     }
+    console.log("Tabelas e dados iniciais criados com sucesso");
   } catch (err) {
     console.error("Erro na criação das tabelas:", err);
+    throw err; // Forçar erro para ser capturado
   }
 }
 
@@ -107,10 +110,15 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
 
-// Iniciar verificação contínua imediatamente
-async function startKeepAlive() {
+// Inicialização completa antes de iniciar o servidor
+async function initializeServer() {
   try {
     await checkDatabaseConnection();
+    await criarTabelas();
+    const server = app.listen(port, "0.0.0.0", () => {
+      console.log(`Servidor rodando na porta ${port}`);
+    });
+    // Verificação contínua
     setInterval(async () => {
       try {
         await db.query("SELECT 1");
@@ -121,23 +129,15 @@ async function startKeepAlive() {
       } catch (err) {
         console.error("Erro na verificação de conexão:", err);
       }
-    }, 30000); // Verifica a cada 30 segundos
+    }, 30000);
+    return server;
   } catch (err) {
-    console.error("Falha ao iniciar keep-alive:", err);
+    console.error("Falha na inicialização do servidor:", err);
+    process.exit(1); // Sair com erro se a inicialização falhar
   }
 }
 
-startKeepAlive().catch((err) =>
-  console.error("Falha na inicialização do keep-alive:", err)
-);
-criarTabelas().catch((err) =>
-  console.error("Falha na inicialização do banco:", err)
-);
-
-// Iniciar servidor e capturar sinais de término
-const server = app.listen(port, "0.0.0.0", () => {
-  console.log(`Servidor rodando na porta ${port}`);
-});
+initializeServer().catch((err) => console.error("Erro na inicialização:", err));
 
 process.on("SIGTERM", () => {
   console.log("Recebido SIGTERM, encerrando servidor...");
