@@ -32,6 +32,29 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "healthy" });
 });
 
+// Rota de login
+app.post("/api/login", async (req, res) => {
+  const { username, senha } = req.body;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM usuarios WHERE username = $1 AND senha = $2",
+      [username, senha]
+    );
+    if (result.rowCount === 1) {
+      // Aqui você pode gerar um token ou configurar um cookie para autenticação
+      res.status(200).json({ message: "Login bem-sucedido", success: true });
+    } else {
+      res
+        .status(401)
+        .json({ message: "Usuário ou senha inválidos", success: false });
+    }
+  } catch (err) {
+    console.error("Erro no login:", err);
+    res.status(500).json({ message: "Erro no servidor", success: false });
+  }
+});
+
 // Inicialização do servidor
 async function startServer() {
   try {
