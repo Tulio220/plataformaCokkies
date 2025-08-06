@@ -5,6 +5,10 @@ const { autenticar } = require("./autenticacao");
 const app = express();
 const port = process.env.PORT || 8080;
 
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
+});
+
 app.use(express.json());
 app.use(cookieParser());
 app.get("/sistema.html", autenticar, (req, res, next) => {
