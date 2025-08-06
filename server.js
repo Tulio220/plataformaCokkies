@@ -5,6 +5,8 @@ const { autenticar } = require("./autenticacao");
 const app = express();
 const port = process.env.PORT || 8080;
 
+let server; // Declarada no escopo global
+
 process.on("unhandledRejection", (err) => {
   console.error("Rejeição não tratada:", err);
 });
@@ -22,23 +24,21 @@ app.use(express.static("public"));
 // Conexão com o banco de dados PostgreSQL (Railway)
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Forçar SSL para Railway
+  ssl: { rejectUnauthorized: false },
 });
 
-// Verificar conexão com o banco de dados
-async function checkDatabaseConnection() {
+// Rota de health check imediata
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
+// Inicialização do servidor
+async function startServer() {
   try {
+    // Verificar conexão e criar tabelas antes de iniciar
     await db.query("SELECT 1");
     console.log("Conexão com o banco de dados estabelecida com sucesso");
-  } catch (err) {
-    console.error("Erro ao conectar ao banco de dados:", err);
-    throw err;
-  }
-}
 
-// Criação das tabelas
-async function criarTabelas() {
-  try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
@@ -77,7 +77,6 @@ async function criarTabelas() {
         tipo TEXT NOT NULL
       );
     `);
-    // Usuário admin padrão
     const admin = await db.query(
       "SELECT id FROM usuarios WHERE username = $1",
       ["admin"]
@@ -88,7 +87,6 @@ async function criarTabelas() {
         "admin123",
       ]);
     }
-    // Produto inicial
     const prod = await db.query("SELECT id FROM produtos WHERE nome = $1", [
       "Cookie Tradicional",
     ]);
@@ -99,26 +97,13 @@ async function criarTabelas() {
       );
     }
     console.log("Tabelas e dados iniciais criados com sucesso");
-  } catch (err) {
-    console.error("Erro na criação das tabelas:", err);
-    throw err;
-  }
-}
 
-// Rota de health check
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "healthy" });
-});
-
-// Inicialização completa antes de iniciar o servidor
-async function initializeServer() {
-  try {
-    await checkDatabaseConnection();
-    await criarTabelas();
-    const server = app.listen(port, "0.0.0.0", () => {
+    // Iniciar servidor
+    server = app.listen(port, "0.0.0.0", () => {
       console.log(`Servidor rodando na porta ${port}`);
     });
-    // Verificação contínua mais frequente
+
+    // Verificação contínua
     setInterval(async () => {
       try {
         await db.query("SELECT 1");
@@ -129,20 +114,26 @@ async function initializeServer() {
       } catch (err) {
         console.error("Erro na verificação de conexão:", err);
       }
-    }, 15000); // Reduzido para 15 segundos
+    }, 15000);
+
     return server;
   } catch (err) {
-    console.error("Falha na inicialização do servidor:", err);
+    console.error("Falha na inicialização:", err);
     process.exit(1);
   }
 }
 
-initializeServer().catch((err) => console.error("Erro na inicialização:", err));
+startServer().catch((err) => console.error("Erro na inicialização:", err));
 
 process.on("SIGTERM", () => {
   console.log("Recebido SIGTERM, encerrando servidor...");
-  server.close(() => {
-    console.log("Servidor encerrado.");
+  if (server) {
+    server.close(() => {
+      console.log("Servidor encerrado.");
+      process.exit(0);
+    });
+  } else {
+    console.log("Nenhum servidor ativo para encerrar.");
     process.exit(0);
-  });
+  }
 });
