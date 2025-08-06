@@ -397,6 +397,6 @@ app.get("/api/dashboard", (req, res) => {
   );
 });
 
-app.listen(port, () =>
-  console.log(`Servidor rodando em http://localhost:${port}`)
-);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${port}`);
+});
