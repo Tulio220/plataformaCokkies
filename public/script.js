@@ -190,8 +190,8 @@ async function preencherTabelaPedidos() {
           <div><b>Valor:</b> R$ ${parseFloat(pedido.valor).toFixed(2).replace(".", ",")}</div>
           <div><span class="status-badge ${pedido.status}">${capitalizar(pedido.status)}</span></div>
           <div style="display:flex; gap:0.5rem;">
-            <button class="btn btn-secondary" onclick="editarPedido(${pedido.id})" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="excluirPedido(${pedido.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-secondary" onclick="editarPedido(${pedido.id})" title="Editar"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger" onclick="excluirPedido(${pedido.id})" title="Excluir"><i class="fas fa-trash"></i> Excluir</button>
           </div>
         </div>
       `
@@ -259,8 +259,8 @@ async function preencherTabelaProdutos() {
           <div><b>Estoque:</b> ${produto.estoque} unid.</div>
           <div><span class="status-badge ${produto.status}">${capitalizar(produto.status)}</span></div>
           <div style="display:flex; gap:0.5rem;">
-            <button class="btn btn-secondary" onclick="editarProduto(${produto.id})" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="excluirProduto(${produto.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-secondary" onclick="editarProduto(${produto.id})" title="Editar"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger" onclick="excluirProduto(${produto.id})" title="Excluir"><i class="fas fa-trash"></i> Excluir</button>
           </div>
         </div>
       `
@@ -326,8 +326,8 @@ async function preencherTabelaCustos() {
           <div><b>Data:</b> ${formatarData(custo.data)}</div>
           <div><span class="status-badge ${custo.tipo}">${capitalizar(custo.tipo)}</span></div>
           <div style="display:flex; gap:0.5rem;">
-            <button class="btn btn-secondary" onclick="editarCusto(${custo.id})" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger" onclick="excluirCusto(${custo.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-secondary" onclick="editarCusto(${custo.id})" title="Editar"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger" onclick="excluirCusto(${custo.id})" title="Excluir"><i class="fas fa-trash"></i> Excluir</button>
           </div>
         </div>
       `
