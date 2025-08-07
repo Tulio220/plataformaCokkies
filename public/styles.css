@@ -139,7 +139,6 @@ body {
   padding: 2%;
 }
 
-
 .sidebar-header {
   padding: 1rem 0.7rem 0.7rem 0.7rem;
   border-bottom: 1px solid var(--cor-sidebar-borda);
@@ -667,6 +666,19 @@ body {
   .header-content {
     text-align: center;
   }
+
+  .sidebar.fechada ~ .main-content {
+    margin-left: 0px !important;
+  }
+
+  .mobile-card div {
+    margin: 2% !important;
+  }
+
+  .section-content active {
+    margin-bottom: 10vh !important;
+  }
+
   .header-content h1 {
     font-size: 1.5rem;
   }
