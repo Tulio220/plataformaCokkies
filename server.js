@@ -47,8 +47,9 @@ app.post("/api/login", async (req, res) => {
       [username, senha]
     );
     if (result.rowCount === 1) {
-      // Redireciona para /sistema.html após login bem-sucedido
-      res.redirect("/sistema.html");
+      // Define o cookie 'user' para corresponder ao middleware
+      res.cookie("user", "true", { maxAge: 3600000, httpOnly: true }); // 1 hora
+      res.status(200).json({ success: true, message: "Login bem-sucedido" });
     } else {
       res
         .status(401)
