@@ -382,8 +382,10 @@ async function calcularValor(produtoSelect, quantidadeInput, valorInput) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
       const produtos = await response.json();
-      if (produtos.length > 0) {
-        const preco = parseFloat(produtos[0].preco);
+      // Busca o produto pelo nome exato
+      const produto = produtos.find(p => p.nome === produtoNome);
+      if (produto) {
+        const preco = parseFloat(produto.preco);
         const quantidade = parseInt(quantidadeInput.value);
         valorInput.value = (preco * quantidade).toFixed(2);
       } else {
