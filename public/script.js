@@ -375,7 +375,9 @@ async function calcularValor(produtoSelect, quantidadeInput, valorInput) {
   const produtoNome = produtoSelect.value;
   if (produtoNome && quantidadeInput.value) {
     try {
-      const response = await fetch(`${API_URL}/produtos?nome=${produtoNome}`);
+      // Fix: Encode the produtoNome to handle spaces/special characters in product names
+      const encodedNome = encodeURIComponent(produtoNome);
+      const response = await fetch(`${API_URL}/produtos?nome=${encodedNome}`);
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
